@@ -6,11 +6,14 @@ const settings = {
     player: {
         size: 20,
         color:'green'
-    }
+    },
+    fps: { limit:60 },
+
+
 }
 
 const data = {
-
+ 
 }
 
 const lines = [];
@@ -41,12 +44,9 @@ class Entity {
             // could add bullet spread here
             projectiles.push( new Projectile(this.x, this.y, direction) );
 
-                  
-            if (projectiles.length > 200) {
-                projectiles.shift();
-            }
 
-            //lines.push(new Line (this.x, this.y, mouse.x, mouse.y) )
+
+            lines.push(new Line (this.x, this.y, mouse.x, mouse.y) )
             
             if (lines.length > 20) {
                 lines.shift();
@@ -128,7 +128,32 @@ const processProjectiles = () => {
     }
 } 
 
+const objectIsOutsideCanvas = (obj) => {
+    let isOutside = false;
 
+    if (obj.x < 0 || obj.x > canvas.width ||
+        obj.y < 0 || obj.y > canvas.height) {
+        isOutside = true;
+    }
+
+
+    return isOutside;
+}
+
+const objectLimiter = () => {
+    
+    for (let i=0; i<projectiles.length; i++) {
+        const proj = projectiles[i];
+        // Remove from index, 
+        if (objectIsOutsideCanvas(proj)) {
+            projectiles.splice(i, 1);
+            i--;
+        }
+    }
+
+
+
+}
 
 
 

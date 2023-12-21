@@ -1,14 +1,14 @@
 //mouse.js
 const mouse = {
     x:-1, y:-1, isDown:false,
+    lineColor:'grey',
 }
 
 const setMouseListeners = () => {
 
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
 
-    canvas.addEventListener('mousemove', function(e) {
+    canvas.addEventListener('mousemove', e => {
+       
         //log(e);
         //where mouse is on the canvas
         let x = e.layerX | 0; 
