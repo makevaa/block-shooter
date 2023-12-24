@@ -5,12 +5,15 @@ const changeCursor = cursor => {
 
 const setDefaultCursor = () => {
     const cursorObj = new Image();
-    const cursorImage = 'img/crosshair.svg';
+    const cursorImage = 'img/crosshair.svg'; 
     cursorObj.src = cursorImage;
-
-    
     changeCursor(cursorImage);
 }
 
 const degreesToRadians = degrees => { return degrees * Math.PI / 180; }
 const radiansToDegrees = radians => { return radians * 180 / Math.PI; }
+
+
+const ranNum = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}

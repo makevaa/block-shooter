@@ -20,7 +20,8 @@ const initCanvas = () => {
 
 const setFps = () => {
     settings.fps.interval = 1000 / settings.fps.limit;
-    settings.fps.then = Date.now();
+    settings.fps.then = window.performance.now();
+
 }
 
 const init = () => {
@@ -35,33 +36,46 @@ const init = () => {
 }
 
 const gameLoop = timestamp => {
-    const now = Date.now();
+    //log(timestamp)
+
+    // Keep requesting new frames
+    window.requestAnimationFrame(gameLoop);
+
+
+    const now = window.performance.now();
     const elapsed = now - settings.fps.then;
+
+
+
+
+
 
     if (elapsed > settings.fps.interval) {
         settings.fps.then = now - (elapsed % settings.fps.interval);
         
         //draw and process stuff
+  
+
         objectLimiter();
-
-
         processControls();
         processProjectiles();
+  
 
         drawBgColor();
-        //drawMouseLine();
+
+        drawPlayer();
 
         drawCrosshair();
 
-        drawPlayer();
+        //drawMouseLine();
         //drawLines();
+
         drawProjectiles();
     }
   
 
 
-    // Keep requesting new frames
-    window.requestAnimationFrame(gameLoop);
+
 }
 
 

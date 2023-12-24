@@ -5,7 +5,7 @@ const keyDown = {
 }
 
 const processControls = () => {
-    const moveAmount = 5;
+    const moveAmount = 10;
     const val = moveAmount;
 
     if (keyDown.w) { moveEntity(player, 'y', -val); }
@@ -13,7 +13,9 @@ const processControls = () => {
     if (keyDown.s) { moveEntity(player, 'y', val); }
     if (keyDown.d) { moveEntity(player, 'x', val); }
 
-    if (mouse.isDown) { player.shoot(); }
+    if (mouse.isDown) { 
+        player.shoot(); 
+    }
 
 
     //to-do: fix "null-movement"; if oppposing keys are pressed player is halted

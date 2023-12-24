@@ -24,7 +24,6 @@ const setMouseListeners = () => {
     });
 
     canvas.addEventListener('mousedown', e => {
-        player.shoot();
         mouse.isDown = true;
 
     });

@@ -4,7 +4,7 @@ const log = console.log;
 
 const settings = {
     player: {
-        size: 20,
+        size: 15,
         color:'green'
     },
     fps: { limit:60 },
@@ -40,17 +40,28 @@ class Entity {
 
         this.shoot = () => {
 
-            let direction = Math.atan2(mouse.y - this.y, mouse.x - this.x);
-            // could add bullet spread here
-            projectiles.push( new Projectile(this.x, this.y, direction) );
+            let dir = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+            let spread = true;
+        
+            if (spread) {
+                let spreadAngle = 5;
+                dir =  dir * 180/Math.PI; //radians to degree
+                dir = ranNum( dir-(spreadAngle/2), dir+(spreadAngle/2) );
+                dir = dir * (Math.PI/180); //degree to radians
+            }
+
+           
+
+            //projectiles.push( new Projectile(this.x, this.y, dir) );
+            projectiles.push( new Tracer(this.x, this.y, dir) );
 
 
-
-            lines.push(new Line (this.x, this.y, mouse.x, mouse.y) )
+           /* lines.push(new Line (this.x, this.y, mouse.x, mouse.y) )
             
             if (lines.length > 20) {
                 lines.shift();
             }
+            */
 
         }
     }
@@ -65,6 +76,7 @@ class Projectile {
         this.x = x;
         this.y = y;
         this.dir = dir;
+
         this.w = 5;
         this.h = 5;
         this.color = 'red';
@@ -72,9 +84,8 @@ class Projectile {
 
     // Move projectile
     move() {
-        const speed = 100
+        const speed = 400;
         const multi = speed / 10;
-        const dist = 10; //length of bullet tracer line
 
         const deltaX = Math.cos(this.dir); 
         const deltaY = Math.sin(this.dir);
@@ -82,12 +93,6 @@ class Projectile {
         const pointX = deltaX * multi;
         const pointY = deltaY * multi;
 
-        /*
-        this.tracer.x1 +=  pointX;
-        this.tracer.y1 +=  pointY;
-        this.tracer.x2 =  this.tracer.x1 - dist*deltaX;
-        this.tracer.y2 =  this.tracer.y1 - dist*deltaY
-        */
 
         this.x = this.x + pointX;
         this.y = this.y + pointY;
@@ -95,17 +100,22 @@ class Projectile {
 }
 
 class Tracer extends Projectile {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+    constructor(x, y, dir) {
+        super(x, y, dir);
+
+        this.w = 2;
+        this.h = 2;
+        this.color = 'orange';
 
 
   
 
-       
+        /*
+
         this.tracer = { 
             x1:this.x, y1:this.y, x2:this.x, y2:this.y
-          }
+        }
+        */
     }
 
     
@@ -124,7 +134,7 @@ const processProjectiles = () => {
     for (const projectile of projectiles) {
         projectile.move();
 
-        log(projectile.x)
+       // log(projectile.x)
     }
 } 
 
