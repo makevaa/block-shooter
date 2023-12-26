@@ -24,15 +24,23 @@ const processControls = () => {
 
 const setKeyboardControlListeners = () => {
     const moveAmount = 5;
-    const val = moveAmount;
 
-    document.addEventListener('keydown', function(e) {
-        
+    document.addEventListener('keydown', e => {
+    
+
         switch (e.key) {
             case 'w': keyDown.w=true; break;  // W
             case 'a': keyDown.a=true; break;  // A
             case 's': keyDown.s=true; break;  // S
             case 'd': keyDown.d=true; break;  // D
+
+            case 'W': keyDown.w=true; break;  // W
+            case 'A': keyDown.a=true; break;  // A
+            case 'S': keyDown.s=true; break;  // S
+            case 'D': keyDown.d=true; break;  // D
+
+            case '1': changeWeapon(1); break; 
+            case '2': changeWeapon(2); break;
         }
 
         /*if(e.shiftKey) { }

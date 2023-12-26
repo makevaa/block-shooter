@@ -17,7 +17,7 @@ const drawEntity = ent => {
 
     ctx.beginPath();
     //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-    ctx.arc(x, y, w, 0, 2 * Math.PI, false);
+    ctx.arc(x, y, w/2, 0, 2 * Math.PI, false);
     //ctx.arc(x-w/2, y-h/2, 5, 0, Math.PI * 2);
 
     ctx.closePath();
@@ -25,7 +25,7 @@ const drawEntity = ent => {
 }
 
 const drawPlayer = () => {
-    drawEntity(player)
+    drawEntity(player);
 }
 
 
@@ -92,10 +92,30 @@ const drawProjectile = proj => {
 }
 
 
-// Draw all projectiles
-const drawProjectiles = () => {
-    for (const projectile of projectiles) {
-        drawProjectile(projectile);
+// Draw all entities
+const drawEntities = () => {
+    for (const ent of entities) {
+
+        if(ent.dead) { continue; }
+
+        if (ent instanceof Projectile) {
+            drawProjectile(ent);
+        }
+
+        if (ent instanceof Enemy) {
+            drawEntity(ent);
+        }
+
+        if (ent instanceof Player) {
+            drawPlayer(ent);
+        }
+
+        // Draw box around entitites
+        if (true) {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#29bfff";
+            ctx.strokeRect(ent.x-ent.w/2, ent.y-ent.h/2, ent.w, ent.h);
+        }
     }
 }
 
@@ -151,3 +171,32 @@ const drawCrosshair = () => {
       draw_rectangle(x2, y2, lineW, blockLen, i*90);
     }
 }
+
+
+const drawCollisionMap = () => {
+    ctx.lineWidth = 1;
+    //ctx.strokeStyle = "#262626";
+    let tSize = collisionMap[0][0].end.x-collisionMap[0][0].start.x;
+
+    for(let y=0; y<collisionMap.length; y++) {
+        const row = collisionMap[y];
+
+        for(let x=0; x<row.length; x++) {
+            const tile = collisionMap[y][x];
+            
+            if (tile.entities.length > 0) {
+                //log(`collisionTiles has entities: ${tile.entities.length}`);
+            }
+
+            if (tile.entities.length > 0) {
+                ctx.strokeStyle = "#00994d";
+            } else {
+                ctx.strokeStyle = "#262626";
+            }
+
+            ctx.strokeRect(tile.start.x, tile.start.y, tSize, tSize);
+        }
+    }
+}
+
+
