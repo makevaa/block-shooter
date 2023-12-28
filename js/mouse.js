@@ -1,7 +1,7 @@
 //mouse.js
 const mouse = {
     x:-1, y:-1, isDown:false,
-    lineColor:'grey',
+    lineColor:'#4d4d4d',
 }
 
 const setMouseListeners = () => {

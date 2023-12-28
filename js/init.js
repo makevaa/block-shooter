@@ -34,12 +34,15 @@ const init = () => {
     //setDefaultCursor();
     entities.push(player);
     changeWeapon(1);
+    player.speed = settings.player.speed;
 
     setFps();
     initCanvas();
     collisionMap = createCollisionMap();
 
-    testEnemy();
+    //testEnemy();
+    enemySpawner();
+    
 
     setKeyboardControlListeners();
     setMouseListeners();
@@ -65,14 +68,13 @@ const gameLoop = timestamp => {
 
 
 
-
     if (elapsed > settings.fps.interval) {
         settings.fps.then = now - (elapsed % settings.fps.interval);
         
         //draw and process stuff
   
-     
-
+      
+        enemySpawner();
         objectLimiter();
         processControls();
 
@@ -84,16 +86,23 @@ const gameLoop = timestamp => {
 
     
         updateCollisionMap();
-        drawCollisionMap();
+        //drawCollisionMap();
         checkCollision();
 
-        drawPlayer();
-        drawCrosshair();
-
         drawMouseLine();
+     
+
+
         //drawLines();
 
         drawEntities();
+        drawHits();
+        drawMuzzleFire();
+
+    
+        drawCrosshair();
+
+        drawStats();
     }
   
 

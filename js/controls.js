@@ -5,7 +5,7 @@ const keyDown = {
 }
 
 const processControls = () => {
-    const moveAmount = 10;
+    const moveAmount = player.speed;
     const val = moveAmount;
 
     if (keyDown.w) { moveEntity(player, 'y', -val); }

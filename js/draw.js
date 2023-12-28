@@ -4,6 +4,8 @@ const drawBgColor = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+
+
 const drawEntity = ent => {
     ctx.fillStyle = ent.color;
 
@@ -30,7 +32,7 @@ const drawPlayer = () => {
 
 
 
-const drawLine = (line) => {
+const drawLine = line => {
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#29bfff";
 
@@ -111,7 +113,7 @@ const drawEntities = () => {
         }
 
         // Draw box around entitites
-        if (true) {
+        if (false) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#29bfff";
             ctx.strokeRect(ent.x-ent.w/2, ent.y-ent.h/2, ent.w, ent.h);
@@ -200,3 +202,74 @@ const drawCollisionMap = () => {
 }
 
 
+const drawHits = () => {
+    for (const blast of hitBlasts) {
+        const x = blast.x;
+        const y = blast.y;
+        const radius = blast.radius;
+  
+    
+        ctx.beginPath();
+        //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+        //ctx.arc(x-w/2, y-h/2, 5, 0, Math.PI * 2);
+        ctx.closePath();
+
+        let color = `rgba(${blast.color}, ${blast.opacity})`;
+       
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.fill();
+    }
+}
+
+
+const drawMuzzleFire = () => {
+    for (const fire of muzzleFire) {
+        const x = fire.x;
+        const y = fire.y;
+        const radius = fire.radius;
+  
+    
+        ctx.beginPath();
+        //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+
+        //ctx.moveTo(x, y);
+        //ctx.lineTo(150, 0);
+        //ctx.lineTo(75, 129.9);
+
+
+
+
+
+        ctx.closePath();
+
+        const color = `rgba(${fire.color}, ${fire.opacity})`;
+       
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.fill();
+    }
+}
+
+const drawStats = () => {
+    let str;
+    const color = `rgba(255, 51, 0, 0.5)`;
+    ctx.fillStyle = color;
+    ctx.font = "30px monospace";
+
+
+    str = `  Kills: ${stats.kills}`;
+    ctx.fillText(str, 20, 50);
+
+    str = `Enemies: ${waves.current.kills}/${waves.current.enemies}`;
+    ctx.fillText(str, 20, 90);
+
+    str = `   Wave: ${waves.current.num}`;
+    ctx.fillText(str, 20, 130);
+
+
+
+
+}
