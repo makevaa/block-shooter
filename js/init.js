@@ -77,7 +77,7 @@ const setSheetAnimations = () => {
     let img;
     //new sheetAnim(img, frames, frameW, frameH, frameMs);
 
-    // Idle animations
+    // Player idle animations
     img = new Image();
     img.src = `${images.path}${images.player.idle.left.sheet}`;
     images.player.idle.left.anim = new sheetAnim(img, 4, 38, 48, 120);
@@ -87,7 +87,7 @@ const setSheetAnimations = () => {
     images.player.idle.right.anim = new sheetAnim(img, 4, 38, 48, 120);
 
  
-    // Run animations
+    // Player run animations
     img = new Image();
     img.src = `${images.path}${images.player.run.left.sheet}`;
     images.player.run.left.anim = new sheetAnim(img, 12, 66, 48, 70);
@@ -97,7 +97,7 @@ const setSheetAnimations = () => {
     images.player.run.right.anim = new sheetAnim(img, 12, 66, 48, 70);
    
 
-    // Attack animations
+    // Player attack animations
     img = new Image();
     img.src = `${images.path}${images.player.attack.left.sheet}`;
     images.player.attack.left.anim = new sheetAnim(img, 6, 96, 48, 70);
@@ -106,6 +106,15 @@ const setSheetAnimations = () => {
     img.src = `${images.path}${images.player.attack.right.sheet}`;
     images.player.attack.right.anim = new sheetAnim(img, 6, 96, 48, 70);
 
+
+    //Treant run animations
+    img = new Image();
+    img.src = `${images.path}${images.enemy.treant.run.left.sheet}`;
+    images.enemy.treant.run.left.anim = new sheetAnim(img, 4, 32, 32, 150);
+
+    img = new Image();
+    img.src = `${images.path}${images.enemy.treant.run.right.sheet}`;
+    images.enemy.treant.run.right.anim = new sheetAnim(img, 4, 32, 32, 150);
 }
 
 

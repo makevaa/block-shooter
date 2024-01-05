@@ -38,7 +38,15 @@ const images = {
 
     enemy: {
         treant: {
-            files: { left: "treant.png", right: 'treant_right.png' }
+            files: { left: "treant.png", right: 'treant_right.png' },
+            run: {
+                left: {
+                    sheet: 'treant_run.png', anim:-1,
+                }, 
+                right: {
+                    sheet: 'treant_run_right.png',anim:-1,
+                }
+            },
         },
         lich: {
             files: { left: "lich.png", right: 'lich_right.png' }
@@ -71,7 +79,7 @@ const images = {
             }
         }
 
-        
+
     }
 }
 
@@ -483,8 +491,10 @@ class Unit extends Entity {
 
         this.sleep = sleepMs => {
             this.sleeping = true;
+            this.moving = false
             setTimeout(() => {
                 this.sleeping = false;
+                this.moving = true
             }, sleepMs);
         }
 
@@ -496,12 +506,7 @@ class Unit extends Entity {
 class Player extends Unit {
     constructor(x, y, w, h, color) {
         super(x, y, w, h, color);
-        this.img = {
-            idle: {
-                left: images.player.idle.left,
-                right: images.player.idle.right,
-            }
-        }
+
     }
 
     update = () => {
@@ -513,7 +518,8 @@ class Player extends Unit {
 class Enemy extends Unit {
     constructor(x, y, w, h, color) {
         super(x, y, w, h, color);
-        let img = 'treant' // lich treant
+        this.moving = true;
+        let img = 'lich' // lich treant
         this.img.left = images.enemy[img].left;
         this.img.right = images.enemy[img].right;
     }
@@ -534,6 +540,13 @@ class Enemy extends Unit {
     }
 }
 
+class Treant extends Enemy {
+    constructor(x, y, w, h, color) {
+        super(x, y, w, h, color);
+
+    }
+
+}
 
 
 class Weapon {
@@ -878,7 +891,8 @@ const spawnEnemies = (amount) => {
             log('rolling enemy pos')
         }
 
-        const enemy = new Enemy(x, y, 50, 50, '#992600');
+        //const enemy = new Enemy(x, y, 50, 50, '#992600');
+        const enemy = new Treant(x, y, 50, 50, '#992600');
         entities.push(enemy);
     }
 }

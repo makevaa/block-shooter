@@ -43,21 +43,28 @@ const drawSheetFrame = (anim, x, y, w, h) => {
     //ctx.setTransform(1,0,0,1,0,0);
 }
 
-const drawPlayerImage = ent => {
+const drawEntityAnim = ent => {
     let side = 'left';
     if (!ent.facingLeft) { side = 'right' }
 
     let anim;
+    let animBase;
 
-    if (player.moving) {
+    if (ent instanceof Player) 
+        animBase = images.player;
     
-        anim = images.player.run[side].anim;
-
-    } else if (player.attacking) {
-        anim = images.player.attack[side].anim;
+    if (ent instanceof Treant) {
+        animBase = images.enemy.treant;
+    }
         
+    
+
+    if (ent.moving) {
+        anim = animBase.run[side].anim;
+    } else if (ent.attacking) {
+        anim = animBase.attack[side].anim;
     } else { 
-        anim = images.player.idle[side].anim;
+        anim = animBase.idle[side].anim;
     }
 
     let x = ent.x;
@@ -75,6 +82,9 @@ const drawPlayerImage = ent => {
     //ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
 }
 
+
+
+
 const drawEntity = ent => {
     ctx.fillStyle = ent.color;
 
@@ -87,12 +97,12 @@ const drawEntity = ent => {
     //ctx.fillRect(x-w/2, y-h/2, w, h);
 
     if (ent instanceof Enemy) {
-        drawEntityImage(ent);
+        drawEntityAnim(ent);
         return true;
     }
 
     if (ent instanceof Player) {
-        drawPlayerImage(ent);
+        drawEntityAnim(ent);
         return true;
     }
 
