@@ -324,7 +324,6 @@ const saveBg = () => {
     const img = new Image();
     img.src = canvas.toDataURL();
     bgImage = img;
-    log('savebg')
 }
 
 const drawBgImage = () => {

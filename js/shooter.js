@@ -39,6 +39,15 @@ const images = {
     enemy: {
         treant: {
             files: { left: "treant.png", right: 'treant_right.png' },
+            // Treant doesn't have idle animation atm
+            idle: {
+                left: {
+                    sheet: 'treant_run.png', anim:-1,
+                }, 
+                right: {
+                    sheet: 'treant_run_right.png' ,anim:-1,
+                }
+            },
             run: {
                 left: {
                     sheet: 'treant_run.png', anim:-1,
@@ -430,6 +439,7 @@ class Unit extends Entity {
         this.sleeping = false;
         this.moving = false;
         this.attacking = false;
+        this.flashing = false;
        
 
         this.shoot = () => {
@@ -482,11 +492,13 @@ class Unit extends Entity {
         this.flash = () => {
             let color = this.originalColor;
             //log(color);
-            this.color = '#d9d9d9'
+            this.color = '#d9d9d9';
+            this.flashing = true;
 
             setTimeout(() => {
                 this.color = color;
-              }, 10);
+                this.flashing = false;
+              }, 7);
         }
 
         this.sleep = sleepMs => {

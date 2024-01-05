@@ -73,48 +73,35 @@ const setTextures = () => {
     */
 }
 
+const setSheetAnimation = (target, frames, frameW, frameH, frameMs) => {
+    const img = new Image();
+    img.src = `${images.path}${target.sheet}`;
+    target.anim = new sheetAnim(img, frames, frameW, frameH, frameMs);
+}
+
 const setSheetAnimations = () => {
-    let img;
     //new sheetAnim(img, frames, frameW, frameH, frameMs);
 
     // Player idle animations
-    img = new Image();
-    img.src = `${images.path}${images.player.idle.left.sheet}`;
-    images.player.idle.left.anim = new sheetAnim(img, 4, 38, 48, 120);
+    setSheetAnimation(images.player.idle.left, 4, 38, 48, 120);
+    setSheetAnimation(images.player.idle.right, 4, 38, 48, 120);
 
-    img = new Image();
-    img.src = `${images.path}${images.player.idle.right.sheet}`;
-    images.player.idle.right.anim = new sheetAnim(img, 4, 38, 48, 120);
-
- 
     // Player run animations
-    img = new Image();
-    img.src = `${images.path}${images.player.run.left.sheet}`;
-    images.player.run.left.anim = new sheetAnim(img, 12, 66, 48, 70);
-
-    img = new Image();
-    img.src = `${images.path}${images.player.run.right.sheet}`;
-    images.player.run.right.anim = new sheetAnim(img, 12, 66, 48, 70);
-   
-
+    setSheetAnimation(images.player.run.left, 12, 66, 48, 70);
+    setSheetAnimation(images.player.run.right, 12, 66, 48, 70);
+    
     // Player attack animations
-    img = new Image();
-    img.src = `${images.path}${images.player.attack.left.sheet}`;
-    images.player.attack.left.anim = new sheetAnim(img, 6, 96, 48, 70);
+    setSheetAnimation(images.player.attack.left, 6, 96, 48, 70);
+    setSheetAnimation(images.player.attack.right, 6, 96, 48, 70);
 
-    img = new Image();
-    img.src = `${images.path}${images.player.attack.right.sheet}`;
-    images.player.attack.right.anim = new sheetAnim(img, 6, 96, 48, 70);
+    // Treant run animations
+    setSheetAnimation(images.enemy.treant.run.left, 4, 32, 32, 150);
+    setSheetAnimation(images.enemy.treant.run.right, 4, 32, 32, 150);
 
+    // Treant idle animations (same as run atm)
+    setSheetAnimation(images.enemy.treant.idle.left, 4, 32, 32, 150);
+    setSheetAnimation(images.enemy.treant.idle.right, 4, 32, 32, 150);
 
-    //Treant run animations
-    img = new Image();
-    img.src = `${images.path}${images.enemy.treant.run.left.sheet}`;
-    images.enemy.treant.run.left.anim = new sheetAnim(img, 4, 32, 32, 150);
-
-    img = new Image();
-    img.src = `${images.path}${images.enemy.treant.run.right.sheet}`;
-    images.enemy.treant.run.right.anim = new sheetAnim(img, 4, 32, 32, 150);
 }
 
 
@@ -138,7 +125,10 @@ const initBg = () => {
 const init = () => {
 
     //setDefaultCursor();
+    createCrosshair();
     initBg();
+  
+
     setTextures();
     setSheetAnimations();
 

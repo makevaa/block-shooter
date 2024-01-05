@@ -5,7 +5,7 @@
 
 
 
-
+// Unmoving entity sprite, old style
 const drawEntityImage = ent => {
     let img;
 
@@ -19,27 +19,50 @@ const drawEntityImage = ent => {
     let imgX = x - w/2
     let imgY = y - h/2
     //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+
     ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
+
 }
 
+// Draw animation frame from spritesheet
+const drawSheetFrame = (anim, ent) => {
+    let x = ent.x;
+    let y = ent.y;
+    let w = ent.w;
+    let h = ent.h;
 
-const drawSheetFrame = (anim, x, y, w, h) => {
+    let scale = 1;
+    if (ent instanceof Enemy) {
+        scale = 1.5;
+    }
 
     let sheet = anim.sheet;
     //let frames = anim.frames;
     let curFrame = anim.frame.current;
+    
     let frameW = anim.frame.w;
     let frameH = anim.frame.h;
 
     let frameX = curFrame * frameW;
+    let frameY = 0;
 
     // Center image on entity
-    let imgX = x - frameW/2
-    let imgY = y - frameH/2
+    let imgX = x - (frameW*scale)/2
+    let imgY = y - (frameH*scale)/2
 
     //ctx.scale(-1,1);
     //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-    ctx.drawImage(sheet, frameX, 0, frameW, frameH, imgX, imgY, frameW, frameH);
+
+    if (ent.flashing) {
+        ctx.filter = "brightness(300%)";
+        //ctx.filter = "contrast(0%)";
+    }
+    ctx.drawImage(sheet, frameX, frameY, frameW, frameH, imgX, imgY, frameW*scale, frameH*scale);
+    ctx.filter = "brightness(100%)";
+    //ctx.filter = "contrast(100%)";
+   
+    //ctx.strokeStyle = 'lime';
+    //ctx.strokeRect(imgX, imgY, frameW, frameH)
     //ctx.setTransform(1,0,0,1,0,0);
 }
 
@@ -69,14 +92,13 @@ const drawEntityAnim = ent => {
 
     let x = ent.x;
     let y = ent.y;
-
-
     let w = ent.w;
     let h = ent.h;
-    let imgX = x - w/2
-    let imgY = y - h/2
 
-    drawSheetFrame(anim, x, y, w, h);
+    //let imgX = x - w/2
+    //let imgY = y - h/2
+
+    drawSheetFrame(anim, ent);
     anim.step();
     //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
     //ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
@@ -213,7 +235,7 @@ const drawEntities = () => {
         // Draw box around entitites
         if (false) {
             ctx.lineWidth = 1;
-            ctx.strokeStyle = "#29bfff";
+            ctx.strokeStyle = "red";
             ctx.strokeRect(ent.x-ent.w/2, ent.y-ent.h/2, ent.w, ent.h);
         }
     }
@@ -231,46 +253,18 @@ const drawMouseLine = () => {
     ctx.stroke();
 }
 
-// Draw cross hair on mouse position
+
+
+// Draw 2 crosshair images for shadow effect
 const drawCrosshair = () => {
-    const lineW = 3; // Crosshair line width
-    const rad = 20; // Crosshair circle radius
-    const blockLen = 20; // Length of crosshair lines
+    const x = mouse.x - crosshair.width/2;
+    const y = mouse.y - crosshair.height/2;
 
-
-    let color = `rgba(${255}, ${0}, ${0}, ${0.5})`; // Crosshair color
-    if (mouse.isDown) {
-        //color = `rgba(${0}, ${255}, ${0}, ${0.99})`; 
-    }
-
-    const x = mouse.x 
-    const y = mouse.y 
-
-    //ctx.setLineDash([0, 0]);
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = lineW;
-
-    ctx.beginPath();
-    ctx.arc(x, y, rad, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.closePath();
-
-    function draw_rectangle(x, y, w, h, deg){
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(degreesToRadians(deg+90));
-        ctx.fillRect(-1*(w/2), -1*(h/2), w, h);
-        ctx.restore();
-    }
-
-    for (let i=0; i<4; i++){
-      var x2 = x + (rad)*Math.cos( degreesToRadians(i*90) );
-      var y2 = y + (rad)*Math.sin( degreesToRadians(i*90) );
-      //ctx.fillStyle = 'red';
-      draw_rectangle(x2, y2, lineW, blockLen, i*90);
-    }
+    //ctx.filter = "brightness(150%)";
+    ctx.drawImage(crosshairShadow, x+2, y+2);
+    ctx.drawImage(crosshair, x, y);
 }
+
 
 
 const drawCollisionMap = () => {
@@ -359,6 +353,7 @@ const drawStats = () => {
     let str;
     const color = `rgba(255, 51, 0, 0.5)`;
     ctx.fillStyle = color;
+    ctx.textAlign = 'left';
     ctx.font = "30px monospace";
 
     let x = camera.x+5;
