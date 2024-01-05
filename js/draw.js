@@ -1,10 +1,79 @@
+/*** draw.js ***/
 
-const drawBgColor = () => {
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+
+
+
+
+const drawEntityImage = ent => {
+    let img;
+
+    ent.facingLeft ? img=ent.img.left : img=ent.img.right;
+    let x = ent.x;
+    let y = ent.y;
+
+
+    let w = ent.w;
+    let h = ent.h;
+    let imgX = x - w/2
+    let imgY = y - h/2
+    //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
 }
 
 
+const drawSheetFrame = (anim, x, y, w, h) => {
+
+    let sheet = anim.sheet;
+    //let frames = anim.frames;
+    let curFrame = anim.frame.current;
+    let frameW = anim.frame.w;
+    let frameH = anim.frame.h;
+
+    let frameX = curFrame * frameW;
+
+    // Center image on entity
+    let imgX = x - frameW/2
+    let imgY = y - frameH/2
+
+    //ctx.scale(-1,1);
+    //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    ctx.drawImage(sheet, frameX, 0, frameW, frameH, imgX, imgY, frameW, frameH);
+    //ctx.setTransform(1,0,0,1,0,0);
+}
+
+const drawPlayerImage = ent => {
+    let side = 'left';
+    if (!ent.facingLeft) { side = 'right' }
+
+    let anim;
+
+    if (player.moving) {
+    
+        anim = images.player.run[side].anim;
+
+    } else if (player.attacking) {
+        anim = images.player.attack[side].anim;
+        
+    } else { 
+        anim = images.player.idle[side].anim;
+    }
+
+    let x = ent.x;
+    let y = ent.y;
+
+
+    let w = ent.w;
+    let h = ent.h;
+    let imgX = x - w/2
+    let imgY = y - h/2
+
+    drawSheetFrame(anim, x, y, w, h);
+    anim.step();
+    //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    //ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
+}
 
 const drawEntity = ent => {
     ctx.fillStyle = ent.color;
@@ -17,13 +86,24 @@ const drawEntity = ent => {
     //ctx.fillRect(x, y, w, h)
     //ctx.fillRect(x-w/2, y-h/2, w, h);
 
-    ctx.beginPath();
-    //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-    ctx.arc(x, y, w/2, 0, 2 * Math.PI, false);
-    //ctx.arc(x-w/2, y-h/2, 5, 0, Math.PI * 2);
+    if (ent instanceof Enemy) {
+        drawEntityImage(ent);
+        return true;
+    }
 
+    if (ent instanceof Player) {
+        drawPlayerImage(ent);
+        return true;
+    }
+
+    ctx.beginPath();
+    ctx.arc(x, y, w/2, 0, 2*Math.PI, false);
     ctx.closePath();
-    ctx.fill();
+    ctx.strokeStyle = "#29bfff";
+
+    //ctx.fill();
+    ctx.stroke();
+
 }
 
 const drawPlayer = () => {
@@ -100,6 +180,12 @@ const drawEntities = () => {
 
         if(ent.dead) { continue; }
 
+        // Don't draw entites outside of view
+        if (isOutsideCamera(ent)) {
+            //log('outside camera');
+            continue;
+        }
+
         if (ent instanceof Projectile) {
             drawProjectile(ent);
         }
@@ -109,7 +195,9 @@ const drawEntities = () => {
         }
 
         if (ent instanceof Player) {
+            drawEntityShadow(ent);
             drawPlayer(ent);
+            
         }
 
         // Draw box around entitites
@@ -226,8 +314,12 @@ const drawHits = () => {
 
 const drawMuzzleFire = () => {
     for (const fire of muzzleFire) {
-        const x = fire.x;
-        const y = fire.y;
+        //const x = fire.x;
+        //const y = fire.y;
+        const x = player.x + Math.cos(fire.dir)* player.w/2;
+        const y = player.y + Math.sin(fire.dir)* player.h/2; 
+
+  
         const radius = fire.radius;
   
     
@@ -259,17 +351,71 @@ const drawStats = () => {
     ctx.fillStyle = color;
     ctx.font = "30px monospace";
 
+    let x = camera.x+5;
+    let y = camera.y+80;
+
 
     str = `  Kills: ${stats.kills}`;
-    ctx.fillText(str, 20, 50);
+    ctx.fillText(str, x, y);
 
     str = `Enemies: ${waves.current.kills}/${waves.current.enemies}`;
-    ctx.fillText(str, 20, 90);
+    ctx.fillText(str, x, y+40);
 
     str = `   Wave: ${waves.current.num}`;
-    ctx.fillText(str, 20, 130);
+    ctx.fillText(str, x, y+80);
+
+}
+
+const drawCamera = () => {
+    ctx.beginPath();
+    ctx.arc(camera.x, camera.y, 30, 0, 2 * Math.PI, false);
+    ctx.closePath();
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+
+    let str = `camera ${camera.x}, ${camera.y}`
+    const color = '#0362fc';
+    ctx.fillStyle = color;
+    ctx.font = "30px monospace";
+    ctx.fillText(str, camera.x+5, camera.y+30);
+}
+
+const drawMouseData = () => {
+    let str = `mouse ${mouse.x}, ${mouse.y}`
+    const color = 'green';
+    ctx.fillStyle = color;
+    ctx.font = "30px monospace";
+    ctx.fillText(str, camera.x+5, camera.y+200);
+
+    str = `player ${player.x}, ${player.y}`
+    ctx.fillText(str, camera.x+5, camera.y+240);
+}
 
 
+const drawEntityShadow = ent => {
+    ctx.fillStyle = 'rgba(0,0,0, 0.7)';
 
+    const x = ent.x;
+    const y = ent.y + ent.h*0.55;
+
+    let w = ent.w * 0.4;
+    const h = ent.h / 8;
+
+    if (player.moving) {
+        w = ent.w * 0.5;
+    }
+   
+
+
+     
+
+    ctx.beginPath();
+    //ctx.arc(x, y, w/2, 0, 2*Math.PI, false);
+    ctx.ellipse(x, y, w, h, degreesToRadians(0), 2*Math.PI, false)
+    ctx.closePath();
+    //ctx.strokeStyle = "#29bfff";
+
+    ctx.fill();
+    //ctx.stroke();
 
 }
