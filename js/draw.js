@@ -64,6 +64,7 @@ const drawSheetFrame = (anim, ent) => {
     //ctx.strokeStyle = 'lime';
     //ctx.strokeRect(imgX, imgY, frameW, frameH)
     //ctx.setTransform(1,0,0,1,0,0);
+    anim.step();
 }
 
 const drawEntityAnim = ent => {
@@ -74,34 +75,30 @@ const drawEntityAnim = ent => {
     let animBase;
 
     if (ent instanceof Player) 
-        animBase = images.player;
+        //animBase = images.player;
     
     if (ent instanceof Treant) {
-        animBase = images.enemy.treant;
+        //animBase = images.enemy.treant;
     }
-        
-    
+
+
 
     if (ent.moving) {
-        anim = animBase.run[side].anim;
+        anim = ent.anim.run[side];
     } else if (ent.attacking) {
-        anim = animBase.attack[side].anim;
+        anim = ent.anim.attack[side];
     } else { 
-        anim = animBase.idle[side].anim;
+        if (ent.anim.idle !== undefined) {
+            anim = ent.anim.idle[side];
+        }
     }
 
-    let x = ent.x;
-    let y = ent.y;
-    let w = ent.w;
-    let h = ent.h;
-
-    //let imgX = x - w/2
-    //let imgY = y - h/2
+    // Projectiles have only "left" and "right" side anims
+    if (ent instanceof Projectile) {
+        anim = ent.anim[side];
+    }
 
     drawSheetFrame(anim, ent);
-    anim.step();
-    //ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-    //ctx.drawImage(img, 0, 0, img.width, img.height, imgX, imgY, w, h);
 }
 
 
@@ -128,6 +125,17 @@ const drawEntity = ent => {
         return true;
     }
 
+
+
+    if (ent instanceof Sting) {
+        drawEntityAnim(ent);
+        return true;
+    }
+
+
+
+    //drawProjectile
+
     ctx.beginPath();
     ctx.arc(x, y, w/2, 0, 2*Math.PI, false);
     ctx.closePath();
@@ -151,8 +159,9 @@ const drawLine = line => {
     ctx.beginPath();
     ctx.moveTo(line.startX, line.startY);
     ctx.lineTo(line.endX, line.endY);
-    ctx.stroke();
     ctx.closePath();
+    ctx.stroke();
+  
 }
 
 // Draw all lines
@@ -201,16 +210,15 @@ const drawProjectile = proj => {
         ctx.fill();
     }
  
-
-  
 }
 
 
 // Draw all entities
 const drawEntities = () => {
+
     for (const ent of entities) {
 
-        if(ent.dead) { continue; }
+        if (ent.dead) { continue; }
 
         // Don't draw entites outside of view
         if (isOutsideCamera(ent)) {
@@ -218,9 +226,18 @@ const drawEntities = () => {
             continue;
         }
 
-        if (ent instanceof Projectile) {
+        if (ent instanceof Sting) {
+            //drawEntity(ent);
+            //drawSheetFrame(ent.anim.left, ent);
+            drawEntity(ent)
+       
+
+
+        } else if (ent instanceof Projectile) {
             drawProjectile(ent);
         }
+
+
 
         if (ent instanceof Enemy) {
             drawEntity(ent);
@@ -228,15 +245,12 @@ const drawEntities = () => {
 
         if (ent instanceof Player) {
             drawEntityShadow(ent);
-            drawPlayer(ent);
-            
+            drawEntity(ent);
         }
 
         // Draw box around entitites
         if (false) {
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = "red";
-            ctx.strokeRect(ent.x-ent.w/2, ent.y-ent.h/2, ent.w, ent.h);
+        d
         }
     }
 }
@@ -299,7 +313,6 @@ const drawHits = () => {
         const x = blast.x;
         const y = blast.y;
         const radius = blast.radius;
-  
     
         ctx.beginPath();
         //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
@@ -334,9 +347,6 @@ const drawMuzzleFire = () => {
         //ctx.moveTo(x, y);
         //ctx.lineTo(150, 0);
         //ctx.lineTo(75, 129.9);
-
-
-
 
 
         ctx.closePath();
@@ -382,7 +392,7 @@ const drawCamera = () => {
     const color = '#0362fc';
     ctx.fillStyle = color;
     ctx.font = "30px monospace";
-    ctx.fillText(str, camera.x+5, camera.y+30);
+    ctx.fillText(str, camera.x+5, camera.y+50);
 }
 
 const drawMouseData = () => {
@@ -394,6 +404,25 @@ const drawMouseData = () => {
 
     str = `player ${player.x}, ${player.y}`
     ctx.fillText(str, camera.x+5, camera.y+240);
+}
+
+const drawPlayerData = () => {
+    const color = 'green';
+    ctx.fillStyle = color;
+    ctx.font = "30px monospace";
+    let str;
+
+    str = `lvl: ${player.level}`;
+    ctx.fillText(str, camera.x+5, camera.y+280);
+
+    str = `xp: ${player.xp}`
+    ctx.fillText(str, camera.x+5, camera.y+320);
+
+  
+
+    str = `xp to lvl: ${player.xpToLevel}`;
+    ctx.fillText(str, camera.x+5, camera.y+360);
+
 }
 
 
@@ -411,9 +440,6 @@ const drawEntityShadow = ent => {
     }
    
 
-
-     
-
     ctx.beginPath();
     //ctx.arc(x, y, w/2, 0, 2*Math.PI, false);
     ctx.ellipse(x, y, w, h, degreesToRadians(0), 2*Math.PI, false)
@@ -422,5 +448,75 @@ const drawEntityShadow = ent => {
 
     ctx.fill();
     //ctx.stroke();
+}
 
+
+const drawFloatText = floatText => {
+    //let x = explo.npc.x*tSize, y = explo.npc.y*tSize;
+    //let endX = arc.endX, endY = arc.endY;
+    //let frames = blast.frames;
+    let content = floatText.content;
+    //content = "★" // ✖ ☠ █ ▲ ★
+
+    let opa = floatText.opacity;
+    let r = 200, g = 200, b = 200;
+    const color = `rgba(${r}, ${g}, ${b}, ${opa})`;
+    const shadowColor =  `rgba(${0}, ${0}, ${0}, ${opa})`;
+
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+
+ 
+
+    const x = floatText.x + floatText.offsetX;
+    const y = floatText.y+ floatText.offsetY; 
+    ctx.fillStyle = shadowColor;
+    ctx.fillText(content,  x+2, y+2);
+    ctx.fillStyle = color;
+    ctx.fillText(content,  x, y);
+}
+
+
+const drawFloatTexts = () => {
+    ctx.font = '800 1.1em monospace';
+    ctx.textAlign = 'center'
+
+    //let now, elapsed;
+
+    for (const text of floatTexts) {
+
+        drawFloatText(text);
+        text.progress();
+    }
+}
+
+const drawPlayerHealthBar = () => {
+    const maxW = 50;
+    const x = player.x - maxW/2;
+    const y = player.y + 30;
+
+    let w = maxW * player.hp/player.maxHp;
+    if (w < 0) { w = 0; }
+
+    const h = 5
+
+
+    ctx.lineWidth = 1;
+
+    ctx.strokeStyle = "black";
+    ctx.strokeRect(x-1, y-1, maxW+1, h+1);
+
+    
+    ctx.fillStyle = "red";
+    ctx.fillRect(x, y, w, h);
+}
+
+// xp to next level is needed
+
+const setXpBar = () => {
+    const xpToLevel = player.xpToLevel;
+    const w = (player.xp/xpToLevel)*100;
+    xpBarElem.style.width = `${w}%`;
+
+    
 }

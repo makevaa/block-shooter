@@ -1,19 +1,32 @@
 /*** shooter.js ***/
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let player;
-
 const log = console.log;
 
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const xpBarElem = document.querySelector('#xp-bar-container > .bar');
+const levelNumElem = document.querySelector('#xp-bar-container > .level-container > .level');
+
+
+
+let player;
+
+const perf = {
+    fps: 60,
+    frameDuration: 1000/60,
+
+    prevTime: window.performance.now(),
+
+    accumulatedFrameTime: 0,
+}
+
 const settings = {
+    godMode: false,
     player: {
         size: 40,
         color:'green',
         speed: 5,
 
- 
     },
-    fps: { limit: 60 },
 
     map: {
         w:3000, h: 2000,
@@ -24,8 +37,6 @@ const settings = {
     },
 
     draw: {
-        camera:true,
-        collisionMap:false,
         debugData:true,
     }
 }
@@ -38,23 +49,13 @@ const images = {
 
     enemy: {
         treant: {
-            files: { left: "treant.png", right: 'treant_right.png' },
-            // Treant doesn't have idle animation atm
             idle: {
-                left: {
-                    sheet: 'treant_run.png', anim:-1,
-                }, 
-                right: {
-                    sheet: 'treant_run_right.png' ,anim:-1,
-                }
+                left:  'treant_run.png',
+                right: 'treant_run_right.png'
             },
             run: {
-                left: {
-                    sheet: 'treant_run.png', anim:-1,
-                }, 
-                right: {
-                    sheet: 'treant_run_right.png',anim:-1,
-                }
+                left: 'treant_run.png',
+                right: 'treant_run_right.png',
             },
         },
         lich: {
@@ -64,32 +65,35 @@ const images = {
 
     player: {
         idle: {
-            left: {
-                sheet: 'hero_idle.png', anim:-1,
-            }, 
-            right: {
-                sheet: 'hero_idle_right.png' ,anim:-1,
-            }
+            left: 'hero_idle.png',
+            right: 'hero_idle_right.png',
         },
         run: {
-            left: {
-                sheet: 'hero_run.png', anim:-1,
-            }, 
-            right: {
-                sheet: 'hero_run_right.png',anim:-1,
-            }
+            left:  'hero_run.png',
+            right: 'hero_run_right.png'
         },
         attack: {
-            left: {
-                sheet: 'hero_attack.png', anim:-1,
-            }, 
-            right: {
-                sheet: 'hero_attack_right.png',anim:-1,
-            }
+            left: 'hero_attack.png',
+            right: 'hero_attack_right.png'
         }
-
-
+    },
+    proj: {
+        sting: {
+            left: 'sting_alt_2.png',
+            right: 'sting_alt_2.png',
+        }
     }
+}
+
+const changeWeapon = num => {
+    let wep;
+    switch (num) {
+        case 1: wep = new Gatling(); break; 
+        case 2: wep = new Stinger(); break; 
+
+        case 0: wep = new Weapon(); break; 
+    }
+    player.weapon = wep;
 }
 
 class sheetAnim {
@@ -140,6 +144,7 @@ const entities = [];
 
 const hitBlasts = [];
 const muzzleFire = [];
+const floatTexts = [];
 
 let collisionMap;
 
@@ -287,6 +292,7 @@ const checkCollision = () => {
             for (const ent of tile.entities) {
                 //let id = ``;
                 if(ent.dead) { continue; }       
+                if(ent.sleeping) { continue; }     
              
 
                 // Loop entities again to check for collisions
@@ -352,7 +358,7 @@ const checkCollision = () => {
                                 moveEntity(ent1, 'y', ranNum(-10, 10) );
 
                                 //Block entity movement for a while.
-                                ent1.sleep(500);
+                                ent1.sleep(ranNum(1000,1500));
                             }
                             
                         }
@@ -369,15 +375,21 @@ const checkCollision = () => {
 
                         // Ignore friendly fire
                         if (target instanceof Player && proj.friendly ) {
-                            log('Friendly fire.');
+                            //log('Friendly fire.');
                             continue
                         }
 
                         //log(`intersect found (boundingboxes): ${ent.id}|${entToCheck.id}`);
 
                         hitBlasts.push(new HitBlast(proj.x, proj.y, ranNum(5,10)));
+
+                        floatTexts.push( new FloatText(target.x, target.y, proj.damage) );
+
                         target.takeDamage(proj.damage);
-                        proj.kill();
+                        if (proj.killOnImpact) {
+                            proj.kill();
+                        }
+                   
 
                         if (target instanceof Enemy && target.dead) {
                             stats.kills++;
@@ -431,7 +443,9 @@ class Unit extends Entity {
         super(x, y, w, h, color);
 
         this.weapon = new Weapon('test');
+        this.maxHp = 10;
         this.hp = 10;
+        
         this.speed = 1;
         this.img = { left:-1, right:-1 }
         this.facingLeft = true;
@@ -440,6 +454,12 @@ class Unit extends Entity {
         this.moving = false;
         this.attacking = false;
         this.flashing = false;
+
+        this.anim = {
+            idle: { left:-1, right:-1},
+            run: { left:-1, right:-1},
+            attack: { left:-1, right:-1},
+        }
        
 
         this.shoot = () => {
@@ -448,7 +468,10 @@ class Unit extends Entity {
 
             if (elapsed > this.weapon.fireRate) {
                 this.weapon.lastFired = now;
-                let dir = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+
+                let x = this.x;
+                let y = this.y;
+                let dir = Math.atan2(mouse.y - y, mouse.x - x);
             
                 if (this.weapon.spread > 0) {
                     let spreadAngle = this.weapon.spread;
@@ -475,9 +498,7 @@ class Unit extends Entity {
 
         this.takeDamage = amount => { 
             this.hp = this.hp-amount;
-            //this.y -= 1
             if (this.hp <= 0) {
-                //kill unit
                 this.kill();
             } else {
                 this.flash();
@@ -486,6 +507,7 @@ class Unit extends Entity {
 
 
         this.kill = () => {
+            player.addXp(this.xpDrop);
             this.dead = true;
         }
 
@@ -519,17 +541,67 @@ class Player extends Unit {
     constructor(x, y, w, h, color) {
         super(x, y, w, h, color);
 
+        this.maxHp = 100;
+        this.hp = 100;
+
+        this.xp = 0;
+        this.xpToLevel = 100;
+        this.level = 1;
+
+        this.anim = {
+            idle: { 
+                left: getSheetAnim(images.player.idle.left, 4, 38, 48, 120), 
+                right: getSheetAnim(images.player.idle.right, 4, 38, 48, 120), 
+            },
+            run: { 
+                left: getSheetAnim(images.player.run.left, 12, 66, 48, 70), 
+                right: getSheetAnim(images.player.run.right, 12, 66, 48, 70), 
+            },
+            attack: { 
+                left: getSheetAnim(images.player.attack.left, 6, 96, 48, 70), 
+                right: getSheetAnim(images.player.attack.right, 6, 96, 48, 70), 
+            },
+        }
+
     }
 
     update = () => {
         //increasingly adds 0.5 to the dy or dx
-        
     }
+
+    setXpToLevel = () => {
+        const base = 100;
+        const lvl = this.level;
+       
+        const xp = base * ( lvl-1 + (1.55**(lvl-1)) )
+        this.xpToLevel = Math.floor(xp);
+        log (`Xp to level ${this.level+1}: ${xp}`)
+    }
+
+    addXp = amount => {
+        this.xp = this.xp + amount;
+        if (this.xp >= this.xpToLevel) {
+            this.levelUp();
+        }
+        setXpBar();
+    }
+
+    levelUp = () => {
+        this.level = this.level + 1;
+        this.xp = 0;
+        this.setXpToLevel();
+        levelNumElem.innerHTML = this.level;
+    }
+
+
 }
+
+
 
 class Enemy extends Unit {
     constructor(x, y, w, h, color) {
         super(x, y, w, h, color);
+        this.xpDrop = 1;
         this.moving = true;
         let img = 'lich' // lich treant
         this.img.left = images.enemy[img].left;
@@ -555,7 +627,22 @@ class Enemy extends Unit {
 class Treant extends Enemy {
     constructor(x, y, w, h, color) {
         super(x, y, w, h, color);
+        this.xpDrop = 5;
 
+        this.anim = {
+            idle: { 
+                left: getSheetAnim(images.enemy.treant.idle.left, 4, 32, 32, 150), 
+                right: getSheetAnim(images.enemy.treant.idle.right, 4, 32, 32, 150), 
+            },
+            run: { 
+                left: getSheetAnim(images.enemy.treant.idle.left, 4, 32, 32, 150), 
+                right: getSheetAnim(images.enemy.treant.idle.right, 4, 32, 32, 150), 
+            },
+            attack: { 
+                left:-1, 
+                right:-1
+            },
+        }
     }
 
 }
@@ -563,27 +650,28 @@ class Treant extends Enemy {
 
 class Weapon {
     constructor() {
-        this.name = 'default weapon';
         this.projectile = Projectile;
         this.fireRate = 200; //ms, fire rate
+        this.spread = 0; //degres, bullet spread
         this.lastFired = 0;
-        this.spread = 0; //bullet spread radius in degrees
-        
-    }
-
-    fire = () => {
-
     }
 }
 
 class Gatling extends Weapon {
-    constructor(name) {
-        super(name);
-        this.name = 'Gatling'
-        this.projectile = Tracer;
+    constructor() {
+        super();
+        this.projectile = Tracer; 
         this.fireRate = 10; //ms, fire rate
+        this.spread = 15;
+    }
+}
+
+class Stinger extends Weapon {
+    constructor() {
+        super();
+        this.projectile = Sting; 
+        this.fireRate = 50; //ms, fire rate
         this.spread = 10;
-      
     }
 }
 
@@ -596,7 +684,9 @@ class Projectile extends Entity {
         this.dir = dir;
         this.speed = 10;
         this.damage = 5;
+        this.knockback = 0; //px
         this.friendly = friendly;
+        this.killOnImpact = true; //destroy proj on hit
 
         this.w = 5;
         this.h = 5;
@@ -614,7 +704,6 @@ class Projectile extends Entity {
         const pointX = deltaX * multi;
         const pointY = deltaY * multi;
 
-
         this.x = this.x + pointX;
         this.y = this.y + pointY;
     }
@@ -622,20 +711,45 @@ class Projectile extends Entity {
     kill() {
         this.dead = true;
     }
-
 }
+
 
 class Tracer extends Projectile {
     constructor(x, y, dir, friendly) {
         super(x, y, dir, friendly);
 
         this.speed = 30;
-        this.damage = 1;
+        this.damage = 4;
         this.w = 2;
         this.h = 2;
         this.color = 'orange';
+        this.knockback = 5;
     }
-    
+}
+
+
+
+class Sting extends Projectile {
+    constructor(x, y, dir, friendly) {
+        super(x, y, dir, friendly);
+
+        this.speed = 15;
+        this.damage = 1;
+        this.w = 2;
+        this.h = 2;
+        this.color = 'lime';
+        this.knockback = 0;
+        this.killOnImpact = false;
+
+        this.anim = {
+            //left: getSheetAnim(images.proj.sting.left, 3, 32, 32, 150), 
+            //right: getSheetAnim(images.proj.sting.right, 3, 32, 32, 150),
+            left: getSheetAnim(images.proj.sting.left, 3, 32, 32, 70), 
+            right: getSheetAnim(images.proj.sting.right, 3, 32, 32, 70),
+        }
+
+ 
+    }
 }
 
 
@@ -715,14 +829,84 @@ class MuzzleFire extends AnimatedShape {
     }
 }
 
+class FloatText { 
+    constructor(x, y, content) {
+      this.x = x;
+      this.y = y;
+      this.startY = y;
+      this.content = content;
+      this.dead = false;
 
+   
+      this.frame = {
+        total: 50,
+        duration: 30, //ms
+        current:0,
+        last: window.performance.now(),
+      }
+     
+
+      this.offsetX = ranNum(-15, 15);
+      this.offsetY = ranNum(-10, -20);
+  
+      this.opacity = 1
+
+
+      this.moveMax = 50 //how far up the number will float
+
+      this.moveInc = this.moveMax / (this.maxFrames * this.frameDur);
+    }
+
+    kill = () => {
+        this.dead = true;
+    }
+
+
+    //decreaseOpa() { this.opa = this.opa - this.opaInc; }
+    move() {
+      this.y = this.y - this.moveInc;
+    }
+
+    progress = () => {
+        const now = window.performance.now();
+        const elapsed = now - this.frame.last;
+
+        if (elapsed > this.frame.duration) {
+            this.frame.last = now;
+            let newOpa = this.opacity - (1/this.frame.total);
+            if (newOpa < 0) {newOpa = 0;}
+
+            this.opacity = newOpa;
+
+            let progress = this.frame.current/this.frame.total; // 0-1
+           
+
+            let moveAmount = this.moveMax * progress;
+
+            //log(moveAmount)
+
+            
+
+            //log(moveAmount)
+           
+            // Move the text up
+            this.y = this.startY - moveAmount;
+
+            this.frame.current++;
+
+        }
+
+        if (this.frame.current > this.frame.total) {
+            this.kill();
+        }
+
+    }
+    
+  }
 
 const moveEntity = (ent, axis, val) => {
     axis = axis.toLowerCase();
     const newVal = ent[axis]+val;
-
-
-   
 
     // Prevent player moving outside screen
     if (ent instanceof Player) {
@@ -748,18 +932,11 @@ const moveEntity = (ent, axis, val) => {
         }
         ent.prevX = ent.x;
 
-
-        //updateMouse(mouse.x+camera.x+val, mouse.y+camera.y+val);
-       
         centerMap();
-
-   
-      
 
     } else {
         ent[axis] = ent[axis]+val;
     }
-
 }
 
 
@@ -836,6 +1013,25 @@ const objectLimiter = () => {
         }
     }
 
+    // Purge non-entity objects, like hitBlasts, muzzleFire etc.
+    // These objects have 'dead' prop
+    const arraysToPurge = [hitBlasts, muzzleFire, floatTexts];
+
+    const purge = arr => {
+        for (let i=0; i<arr.length; i++) {
+            const item = arr[i];
+            if (item.dead) {
+                arr.splice(i, 1);
+                i--;
+            }
+        }
+    }
+
+    for (const arr of arraysToPurge) {
+        purge(arr);
+    }
+
+    /*
     for (let i=0; i<hitBlasts.length; i++) {
         const hit = hitBlasts[i];
         if (hit.dead) {
@@ -851,17 +1047,11 @@ const objectLimiter = () => {
             i--;
         }
     }
+    */
 }
 
 
-const changeWeapon = num => {
-    let wep;
-    switch (num) {
-        case 1: wep = new Gatling(); break; 
-        case 2: wep = new Weapon(); break; 
-    }
-    player.weapon = wep;
-}
+
 
 
 
@@ -914,7 +1104,13 @@ const enemySpawner = () => {
     if (waves.current.kills >= waves.current.enemies) {
         
         waves.current.num++;
-        waves.current.enemies = waves.enemiesPerWave + waves.current.num;
+
+        const baseAmount = 100;
+        let amount = baseAmount * ( waves.current.num-1 + (1.55**(waves.current.num-1)) )
+        amount = Math.floor(amount);
+        
+
+        waves.current.enemies = amount;
         waves.current.kills = 0;
 
         spawnEnemies(waves.current.enemies);

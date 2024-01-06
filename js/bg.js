@@ -1,5 +1,3 @@
-let bgImage;
-
 const bgSettings = {
     bg: {
         w: settings.map.w,
@@ -10,9 +8,9 @@ const bgSettings = {
         mist: { 
             ////both named color and hex with a # work
             //colors: ['dodgerblue','firebrick','DarkSlateBlue'], 
-            colors: ['#2b420c','#302f1b', 'lime'], 
+            colors: ['#2b420c','#302f1b', 'darkred', 'green'], 
             multiColor:true, 
-            amount: 5000,
+            amount: 9000,
             radMin: 10, radMax: 250,
             opacity: 0.002,
         },
@@ -37,6 +35,14 @@ const bgSettings = {
             amount:2000,
             color:'slategrey'
         },
+        craters: {
+            amount: { min: 100, max: 300},
+            rad: { min: 50, max: 300},
+            layers: { min: 10, max: 20},
+
+            opa: 0.05,
+
+        }
         
     }
 
@@ -312,11 +318,55 @@ const xdrawLines = () => {
     load();
 }
 
+
+
+const drawCrater = (x, y, rad, layers) => {
+    
+    const opa = bgSettings.bg.craters.opa;
+    
+ 
+    //ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${crater.opa})`;
+
+    for (let i=0; i<=layers; i++) {
+        ctx.beginPath();
+        //ctx.arc(crater.x, crater.y, crater.radius/i, 0, Math.PI * 2);
+        //ctx.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle);
+        ctx.ellipse(x, y, rad/i, (rad/i)/4, 0, Math.PI*2, 0);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+const drawCraters = () => {
+    const amount = ranNum(bgSettings.bg.craters.amount.min, bgSettings.bg.craters.amount.max);
+
+    ctx.fillStyle = `rgba(0, 0, 0, ${bgSettings.bg.craters.opa})`;
+
+    for (let i=0; i<amount; i++) {
+        const x = ranNum(0, settings.map.w);
+        const y = ranNum(0, settings.map.h);
+    
+        const rad = ranNum(bgSettings.bg.craters.rad.min, bgSettings.bg.craters.rad.max);
+        const layers = ranNum(bgSettings.bg.craters.layers.min, bgSettings.bg.craters.layers.max);
+    
+        drawCrater(x, y, rad, layers)
+    }
+
+}
+
+
+
 const createBg = () => {
     drawBgColor();
+
+    drawCraters();
     drawLayerStars();
+
     drawMist();
+
     //drawDotStars();
+
+ 
     //drawVignette();
 }
 
@@ -328,5 +378,8 @@ const saveBg = () => {
 
 const drawBgImage = () => {
 	//stackoverflow.com/a/13879402
-    ctx.drawImage(bgImage,-0.5,-0.5);
+    //ctx.drawImage(bgImage,-0.5,-0.5);
+    ctx.drawImage(bgImage, 0, 0);
 }
+
+let bgImage;

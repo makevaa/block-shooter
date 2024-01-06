@@ -24,11 +24,7 @@ const initCanvas = () => {
     canvas.addEventListener('contextmenu', e => e.preventDefault())
 }
 
-const setFps = () => {
-    settings.fps.interval = 1000 / settings.fps.limit;
-    settings.fps.then = window.performance.now();
 
-}
 
 const setTexture = (name) => {
     const left = new Image();
@@ -62,8 +58,8 @@ setPlayerTextures = () => {
 }
 
 const setTextures = () => {
-    setTexture('treant');
-    setTexture('lich');
+    //setTexture('treant');
+    //setTexture('lich');
 
     //setPlayerTextures();
     /*
@@ -73,35 +69,14 @@ const setTextures = () => {
     */
 }
 
-const setSheetAnimation = (target, frames, frameW, frameH, frameMs) => {
+
+const getSheetAnim = (sheet, frames, frameW, frameH, frameMs) => {
     const img = new Image();
-    img.src = `${images.path}${target.sheet}`;
-    target.anim = new sheetAnim(img, frames, frameW, frameH, frameMs);
-}
+    img.src = `${images.path}${sheet}`;
 
-const setSheetAnimations = () => {
-    //new sheetAnim(img, frames, frameW, frameH, frameMs);
-
-    // Player idle animations
-    setSheetAnimation(images.player.idle.left, 4, 38, 48, 120);
-    setSheetAnimation(images.player.idle.right, 4, 38, 48, 120);
-
-    // Player run animations
-    setSheetAnimation(images.player.run.left, 12, 66, 48, 70);
-    setSheetAnimation(images.player.run.right, 12, 66, 48, 70);
-    
-    // Player attack animations
-    setSheetAnimation(images.player.attack.left, 6, 96, 48, 70);
-    setSheetAnimation(images.player.attack.right, 6, 96, 48, 70);
-
-    // Treant run animations
-    setSheetAnimation(images.enemy.treant.run.left, 4, 32, 32, 150);
-    setSheetAnimation(images.enemy.treant.run.right, 4, 32, 32, 150);
-
-    // Treant idle animations (same as run atm)
-    setSheetAnimation(images.enemy.treant.idle.left, 4, 32, 32, 150);
-    setSheetAnimation(images.enemy.treant.idle.right, 4, 32, 32, 150);
-
+    const anim = new sheetAnim(img, frames, frameW, frameH, frameMs);
+    return anim;
+    //target.anim = new sheetAnim(img, frames, frameW, frameH, frameMs);
 }
 
 
@@ -117,7 +92,7 @@ const initBg = () => {
     ctx.scale(scale, scale); 
 
     createBg();
-	ctx.translate(.5,.5); 
+	//ctx.translate(.5,.5); 
     saveBg();
 }
 
@@ -130,7 +105,7 @@ const init = () => {
   
 
     setTextures();
-    setSheetAnimations();
+    //setSheetAnimations();
 
     player = new Player(0, 0, settings.player.size, settings.player.size, settings.player.color);
     
@@ -138,19 +113,16 @@ const init = () => {
     changeWeapon(1);
     player.speed = settings.player.speed;
 
-    setFps();
+
    
 
     initCanvas();
-
-
 
     collisionMap = createCollisionMap();
 
     //testEnemy();
   
     
-
     setKeyboardControlListeners();
     setMouseListeners();
 
@@ -165,67 +137,80 @@ const init = () => {
     window.requestAnimationFrame(gameLoop);
 }
 
-const gameLoop = timestamp => {
-    //log(timestamp)
+// Update game logic
+const update = (frameDur) => {
+    processControls();
+    enemySpawner();
+    objectLimiter();
+    updateEntites();
+    updateCollisionMap();
+    checkCollision();
+}
+
+// Draw everything
+const render = () => {
+
+    drawBgImage();
+        
+    drawEntities();
+
+    drawHits();
+    drawMuzzleFire();
+
+    drawMouseLine();
+    drawCrosshair();
+
+    drawPlayerHealthBar();
+
+    drawStats();
+
+    if (settings.draw.debugData) { 
+        drawCamera();
+        drawMouseData(); 
+        drawPlayerData();
+        //drawCollisionMap();
+    }
+}
+
+// Timestamp ("now") is same as performance.now();
+const gameLoop = now => {
 
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 
+    //const now = window.performance.now();
+    //const now = timestamp;
 
-    const now = window.performance.now();
-    const elapsed = now - settings.fps.then;
+    const elapsed = now - perf.prevTime;
+    perf.prevTime = now;
 
+    perf.accumulatedFrameTime += elapsed;
 
+    let numberOfUpdates = 0;
 
-  
+    while (perf.accumulatedFrameTime >= perf.frameDuration) {
+        update(perf.frameDuration);
+        perf.accumulatedFrameTime -= perf.frameDuration;
+        numberOfUpdates++; 
 
-    if (elapsed > settings.fps.interval) {
-        settings.fps.then = now - (elapsed % settings.fps.interval);
-        
-        //draw and process stuff
-  
-        processControls();
-
-        enemySpawner();
-        objectLimiter();
-
-        updateEntites();
-       
-  
-    
-  
-
-        drawBgColor();
-        drawBgImage();
-
-    
-        updateCollisionMap();
-        if (settings.draw.collisionMap) { drawCollisionMap(); }
-        checkCollision();
-
-        drawMouseLine();
-     
-
-
-        //drawLines();
-
-        drawEntities();
-        drawHits();
-        drawMuzzleFire();
-
-    
-        drawCrosshair();
-
-        drawStats();
-
-        if (settings.draw.camera) { drawCamera(); }
-        if (settings.draw.debugData) { drawMouseData(); }
-
-        
-       
+            // do a sanity check
+    if (numberOfUpdates++ >= 200) {
+        perf.accumulatedFrameTime = 0;
+        //restoreTheGameState();
+        log('broke away with sanity check')
+        break;
+      }
     }
-  
 
+    // this is a percentage of time
+    const interpolate = perf.accumulatedFrameTime / perf.frameDuration;
+    render(interpolate);
+
+    //if (elapsed > perf.frameDuration) {
+        //perf.prevTime = now - (elapsed % perf.frameDuration);
+        //render(interpolate);
+      
+    //}
 
 
 }

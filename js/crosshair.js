@@ -19,9 +19,6 @@ const createCrosshair = (color) => {
     const blockLen = 40; // Length of crosshair lines
 
 
-
-
-
     const x = canvasW/2;
     const y = canvasH/2;
 

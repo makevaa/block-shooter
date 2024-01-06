@@ -16,10 +16,12 @@ const processControls = () => {
     }
 
     
+    
     if (keyDown.w) { moveEntity(player, 'y', -val); }
     if (keyDown.a) { moveEntity(player, 'x', -val); }
     if (keyDown.s) { moveEntity(player, 'y', val); }
     if (keyDown.d) { moveEntity(player, 'x', val); }
+    
     
     player.moving = false;
     
@@ -40,9 +42,10 @@ const processControls = () => {
 
     //Multiplying by a number less then 1 will prevent the object from gaining infinite speed and also cause the object to stop. Can be changed to anything below 1. This will also change how rigidly the circle comes to a stop. it can slide or absuplty stop.
     player.dx *= 0.4;
-    player.dy *= 0.4;*/
+    player.dy *= 0.4;
 
-    //centerMap();
+    centerMap();
+    */
 
 }
 
