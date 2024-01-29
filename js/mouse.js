@@ -7,6 +7,11 @@ const mouse = {
     }
 }
 
+const crosshairTrailSettings = {
+    interval: 30, //ms, save trail interval
+    last: window.performance.now(),
+}
+
 const updateMouse = (x, y) => {
     mouse.x = x;
     mouse.y = y;
@@ -24,8 +29,19 @@ const updateMouse = (x, y) => {
     } else {
         player.facingLeft = false;
     }
+
+      // interval to save crosshair trail
+      const now = window.performance.now();
+      const elapsed = now - crosshairTrailSettings.last;
+
+      if (elapsed > crosshairTrailSettings.interval) {
+          crosshairTrailSettings.last = now;
+          //crosshairTrails.push( new CrosshairTrail(x, y))
+      }
     
 }
+
+
 
 const setMouseListeners = () => {
 
@@ -33,16 +49,36 @@ const setMouseListeners = () => {
     canvas.addEventListener('mousemove', e => {
         //log(e);
         //where mouse is on the canvas
-        let x = e.layerX | 0; 
-        let y = e.layerY | 0;
+        let x = e.offsetX + camera.x;
+        let y = e.offsetY + camera.y;
 
-        x = e.layerX + camera.x;
-        y = e.layerY + camera.y;
+        
 
         //x =+ player.x;
         //y =+ player.y;
         updateMouse(x, y);
-     
+    });
+
+
+ 
+    document.getElementById('xp-bar-container').addEventListener('mousemove', e => {
+        let x = e.offsetX + camera.x;
+        let y = e.offsetY + camera.y;
+        updateMouse(x, y);
+    });
+
+    /*
+    document.getElementById('left').addEventListener('mousemove', e => {
+        let x = e.offsetX + camera.x;
+        let y = e.offsetY + camera.y;
+        updateMouse(x, y);
+    });
+    */
+
+    document.body.addEventListener('mousemove', e => {
+        let x = e.offsetX + camera.x;
+        let y = e.offsetY + camera.y;
+        //updateMouse(x, y);
     });
 
     canvas.addEventListener('mousedown', e => {
@@ -53,6 +89,11 @@ const setMouseListeners = () => {
     canvas.addEventListener('mouseup', e => {
         mouse.isDown = false;
     });
+
+
+
+
+
 
     
 }

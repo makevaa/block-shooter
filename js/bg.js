@@ -10,7 +10,7 @@ const bgSettings = {
             //colors: ['dodgerblue','firebrick','DarkSlateBlue'], 
             colors: ['#2b420c','#302f1b', 'darkred', 'green'], 
             multiColor:true, 
-            amount: 9000,
+            amount: 2000,
             radMin: 10, radMax: 250,
             opacity: 0.002,
         },
@@ -154,7 +154,7 @@ const drawLayerCircles = () => {
 }
 
 const drawLayerStars = () => {
-    let amount = 1;
+    let amount = 100;
     let layerAmount = 5;
     let radMin = 100;
     let radMax = 100;
@@ -365,8 +365,6 @@ const createBg = () => {
     drawMist();
 
     //drawDotStars();
-
- 
     //drawVignette();
 }
 

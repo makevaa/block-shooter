@@ -250,7 +250,7 @@ const drawEntities = () => {
 
         // Draw box around entitites
         if (false) {
-        d
+        
         }
     }
 }
@@ -277,6 +277,26 @@ const drawCrosshair = () => {
     //ctx.filter = "brightness(150%)";
     ctx.drawImage(crosshairShadow, x+2, y+2);
     ctx.drawImage(crosshair, x, y);
+}
+
+const drawCrosshairTrail = (trail) => {
+    const x = trail.x - crosshair.width/2;
+    const y = trail.y - crosshair.height/2;
+
+    //ctx.filter = "brightness(150%)";
+    //ctx.drawImage(crosshairShadow, x+2, y+2);
+    ctx.globalAlpha = trail.opacity;
+    ctx.drawImage(crosshairCenter, x, y);
+    ctx.globalAlpha = 1;
+}
+
+const drawCrosshairTrails = () => {
+
+    for (const trail of crosshairTrails) {
+
+        drawCrosshairTrail(trail);
+        trail.progress();
+    }
 }
 
 
@@ -364,34 +384,34 @@ const drawStats = () => {
     const color = `rgba(255, 51, 0, 0.5)`;
     ctx.fillStyle = color;
     ctx.textAlign = 'left';
-    ctx.font = "30px monospace";
+    ctx.font = settings.debugFont;
 
     let x = camera.x+5;
     let y = camera.y+80;
 
 
     str = `  Kills: ${stats.kills}`;
-    ctx.fillText(str, x, y);
+    ctx.fillText( str, parseInt(x), parseInt(y) );
 
     str = `Enemies: ${waves.current.kills}/${waves.current.enemies}`;
-    ctx.fillText(str, x, y+40);
+    ctx.fillText(str, x, y+20);
 
     str = `   Wave: ${waves.current.num}`;
-    ctx.fillText(str, x, y+80);
+    ctx.fillText(str, x, y+40);
 
 }
 
 const drawCamera = () => {
-    ctx.beginPath();
-    ctx.arc(camera.x, camera.y, 30, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.fillStyle = 'blue';
-    ctx.fill();
+    //ctx.beginPath();
+    //ctx.arc(camera.x, camera.y, 30, 0, 2 * Math.PI, false);
+    //ctx.closePath();
+    //ctx.fillStyle = 'blue';
+    //ctx.fill();
 
     let str = `camera ${camera.x}, ${camera.y}`
     const color = '#0362fc';
     ctx.fillStyle = color;
-    ctx.font = "30px monospace";
+    ctx.font = settings.debugFont;
     ctx.fillText(str, camera.x+5, camera.y+50);
 }
 
@@ -399,29 +419,29 @@ const drawMouseData = () => {
     let str = `mouse ${mouse.x}, ${mouse.y}`
     const color = 'green';
     ctx.fillStyle = color;
-    ctx.font = "30px monospace";
-    ctx.fillText(str, camera.x+5, camera.y+200);
+    ctx.font = settings.debugFont;
+    ctx.fillText(str, camera.x+5, camera.y+150);
 
     str = `player ${player.x}, ${player.y}`
-    ctx.fillText(str, camera.x+5, camera.y+240);
+    ctx.fillText(str, camera.x+5, camera.y+170);
 }
 
 const drawPlayerData = () => {
     const color = 'green';
     ctx.fillStyle = color;
-    ctx.font = "30px monospace";
+    ctx.font = settings.debugFont;
     let str;
 
     str = `lvl: ${player.level}`;
-    ctx.fillText(str, camera.x+5, camera.y+280);
+    ctx.fillText(str, camera.x+5, camera.y+200);
 
     str = `xp: ${player.xp}`
-    ctx.fillText(str, camera.x+5, camera.y+320);
+    ctx.fillText(str, camera.x+5, camera.y+220);
 
   
 
     str = `xp to lvl: ${player.xpToLevel}`;
-    ctx.fillText(str, camera.x+5, camera.y+360);
+    ctx.fillText(str, camera.x+5, camera.y+240);
 
 }
 
@@ -517,6 +537,23 @@ const setXpBar = () => {
     const xpToLevel = player.xpToLevel;
     const w = (player.xp/xpToLevel)*100;
     xpBarElem.style.width = `${w}%`;
-
-    
 }
+
+const drawSideBars = () => {
+    const w = 400;
+    ctx.fillStyle = 'black';
+
+    // Left bar
+    ctx.fillRect(camera.x, camera.y, w, canvas.height);
+
+    // Right bar
+    ctx.fillRect(camera.x+canvas.width-w, camera.y, w, canvas.height);
+}
+
+const showSidebarImages = () => {
+    const imgs = document.querySelectorAll('.sidebar > .image-container');
+    for (const img of imgs) {
+        img.style.opacity = 1;
+    }
+}
+

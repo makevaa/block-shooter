@@ -21,6 +21,7 @@ const perf = {
 
 const settings = {
     godMode: false,
+    showStartMenu:false,
     player: {
         size: 40,
         color:'green',
@@ -29,7 +30,7 @@ const settings = {
     },
 
     map: {
-        w:3000, h: 2000,
+        w:2000, h: 1000,
         offset: {
             //px from top-left of canvas to top-left of ctx
             x:0, y:0
@@ -37,8 +38,11 @@ const settings = {
     },
 
     draw: {
-        debugData:true,
-    }
+        debugData:false,
+    },
+
+    xpBarHeight: 30, //px
+    debugFont:'15px monospace',
 }
 
 const images = {
@@ -96,42 +100,7 @@ const changeWeapon = num => {
     player.weapon = wep;
 }
 
-class sheetAnim {
-    constructor(sheet, frames, frameW, frameH, frameMs) {
-        this.sheet = sheet;
-        this.frames = frames,
-        //log(sheet)
-        this.frame = {
-            current:0,
-            dur: frameMs, //ms
-            w: frameW, 
-            h: frameH,
-            last: window.performance.now(),
-        }
 
-        
-    }
-
-    step = () => {
-        const now = window.performance.now();
-        const elapsed = now - this.frame.last;
-
-        if (elapsed > this.frame.dur) {
-            this.frame.last = now;
-            this.frame.current++;
-            if (this.frame.current >= this.frames) {
-                this.frame.current = 0;
-            }
-        }
-
-       
-
-
-    }
-
-
-
-}
 
 const stats = {
     kills:0,
@@ -145,9 +114,38 @@ const entities = [];
 const hitBlasts = [];
 const muzzleFire = [];
 const floatTexts = [];
+const crosshairTrails = [];
 
 let collisionMap;
 
+
+class sheetAnim {
+    constructor(sheet, frames, frameW, frameH, frameMs) {
+        this.sheet = sheet;
+        this.frames = frames,
+        //log(sheet)
+        this.frame = {
+            current:0,
+            dur: frameMs, //ms
+            w: frameW, 
+            h: frameH,
+            last: window.performance.now(),
+        } 
+    }
+
+    step = () => {
+        const now = window.performance.now();
+        const elapsed = now - this.frame.last;
+
+        if (elapsed > this.frame.dur) {
+            this.frame.last = now;
+            this.frame.current++;
+            if (this.frame.current >= this.frames) {
+                this.frame.current = 0;
+            }
+        }
+    }
+}
 
 class CollisionTile {
     constructor(startX, startY, endX, endY) {
@@ -160,7 +158,6 @@ class CollisionTile {
 
         this.entities = [];
     }
-
 }
 
 const createCollisionMap = () => {
@@ -273,12 +270,14 @@ const checkCollision = () => {
     // id1|id2 : true
     // id2|id1 : true
 
- 
+    let tile
+    let row;
+
     for (let i=0; i<collisionMap.length; i++) {
-        const row = collisionMap[i];
+        row = collisionMap[i];
 
         for (let j=0; j<row.length; j++) {
-            const tile = collisionMap[i][j];
+            tile = collisionMap[i][j];
             
             
             if ( isOutsideCamera( {x:tile.start.x, y:tile.start.y} ) ) {
@@ -297,25 +296,31 @@ const checkCollision = () => {
 
                 // Loop entities again to check for collisions
                 for (const entToCheck of tile.entities) {
-                    if(entToCheck.dead) { continue; }    
-                    if(ent.dead) { continue; }   
-
-                    // Don't check collision against entity itself
-                    if (ent.id === entToCheck.id) {
-                        break;
-                    } 
-
-                
+ 
                     if ( pairsChecked.get(`${ent.id}|${entToCheck.id}`) ||
                          pairsChecked.get(`${entToCheck.id}|${ent.id}`) ) {
-                        // Pair has already been checked, ignore
-                        //log('pairs checked already')
+                    // Pair has already been checked, ignore
+                    //log('pairs checked already')
                         continue;
                     } else {
                         // Set the pair as checked, both ways
                         pairsChecked.set(`${ent.id}|${entToCheck.id}`, true);
                         pairsChecked.set(`${entToCheck.id}|${ent.id}`, true);
                     }
+
+                    // Don't check collision against entity itself
+                        if (ent.id === entToCheck.id) {
+                        //break;
+                        continue;
+                    } 
+
+                    if(entToCheck.dead) { continue; }    
+                    if(ent.dead) { continue; }   
+
+          
+
+                
+     
 
 
                     const entBox1 = getEntityBoundingBox(ent);
@@ -354,11 +359,12 @@ const checkCollision = () => {
                                 // Move entity to random pos
                                 // moveEntity = (ent, axis, val)
 
-                                moveEntity(ent1, 'x', ranNum(-10, 10) );
-                                moveEntity(ent1, 'y', ranNum(-10, 10) );
+                                let dist = 20;
+                                moveEntity(ent2, 'x', ranNum(-dist, dist) );
+                                moveEntity(ent2, 'y', ranNum(-dist, dist) );
 
                                 //Block entity movement for a while.
-                                ent1.sleep(ranNum(1000,1500));
+                                ent2.sleep(ranNum(1000,1500));
                             }
                             
                         }
@@ -526,10 +532,12 @@ class Unit extends Entity {
         this.sleep = sleepMs => {
             this.sleeping = true;
             this.moving = false
+            
             setTimeout(() => {
                 this.sleeping = false;
                 this.moving = true
             }, sleepMs);
+            
         }
 
 
@@ -902,7 +910,54 @@ class FloatText {
 
     }
     
-  }
+}
+
+
+class CrosshairTrail {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+      
+        this.opacity = 1;
+        //this.color = `255, 255, 255`;
+        this.dead = false;
+
+        this.frame = {
+            duration: 50, //ms
+            total: 3, //max frames
+            current: -1,
+            last: window.performance.now()
+        }
+
+        this.kill = () => {
+            this.dead = true;
+        }
+
+        this.progress = () => {
+
+            const now = window.performance.now();
+            const elapsed = now - this.frame.last;
+
+            if (elapsed > this.frame.duration) {
+                this.frame.last = now;
+                let newOpa = this.opacity - (1/this.frame.total);
+                if (newOpa < 0) {newOpa = 0;}
+
+                this.opacity = newOpa;
+                this.frame.current++;
+    
+            }
+
+            if (this.frame.current > this.frame.total) {
+                this.kill();
+            }
+
+        }
+        
+    }
+
+}
+
 
 const moveEntity = (ent, axis, val) => {
     axis = axis.toLowerCase();
@@ -1015,7 +1070,7 @@ const objectLimiter = () => {
 
     // Purge non-entity objects, like hitBlasts, muzzleFire etc.
     // These objects have 'dead' prop
-    const arraysToPurge = [hitBlasts, muzzleFire, floatTexts];
+    const arraysToPurge = [hitBlasts, muzzleFire, floatTexts, crosshairTrails];
 
     const purge = arr => {
         for (let i=0; i<arr.length; i++) {
@@ -1077,7 +1132,7 @@ const waves = {
         num:0,
         kills:0,
     },
-    enemiesPerWave:100,
+    //enemiesPerWave:100,
 }
 
 const spawnEnemies = (amount) => {
@@ -1105,14 +1160,13 @@ const enemySpawner = () => {
         
         waves.current.num++;
 
-        const baseAmount = 100;
+        const baseAmount = 10;
         let amount = baseAmount * ( waves.current.num-1 + (1.55**(waves.current.num-1)) )
         amount = Math.floor(amount);
         
 
         waves.current.enemies = amount;
         waves.current.kills = 0;
-
         spawnEnemies(waves.current.enemies);
     }
     

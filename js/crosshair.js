@@ -26,23 +26,46 @@ const createCrosshair = (color) => {
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = lineW;
+     
 
-    ctx.beginPath();
+    
+    // Save just the crosshair center image to separate image
+    // Bug: trail is black, because the shadow is drawn later
+    //than the red crosshair, and the black image is saved:
+    ctx.font = '50px monospace';
+    ctx.textAlign = 'center';
+    let str = `☠`;
+    //ctx.fillStyle = `rgba(255, 0, 0, 0.7)`;//hard-coded hack 
+   
+    //ctx.fillStyle = color;
+
+    //if (crosshairCenter === undefined) {
+        //let trailColor = 'lime';
+        //ctx.fillStyle = trailColor;
+        ctx.fillText(str, x+0.5, y+18, 50);
+        ctx.fillStyle = color;
+
+        const centerImage = new Image();
+        centerImage.src = canvas.toDataURL();
+        crosshairCenter = centerImage;
+        
+    //} else {
+        //ctx.fillText(str, x+0.5, y+18, 50);
+    //}
+       
+
+  
+
+    //ctx.beginPath();
     //ctx.arc(x, y, rad, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.closePath();
+    //ctx.stroke();
+    //ctx.closePath();
 
     function draw_rectangle(x, y, w, h, deg){
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(degreesToRadians(deg+90));
-
-        //ctx.fillStyle = 'black';
-        //ctx.fillRect(-(w/2)+5, -(h/2)+5, w, h);
-
-        ctx.fillStyle = color;
         ctx.fillRect(-(w/2), -(h/2), w, h);
-
         ctx.restore();
     }
 
@@ -50,7 +73,6 @@ const createCrosshair = (color) => {
     for (let i=0; i<4; i++){
         let x2 = x + (rad)*Math.cos( degreesToRadians(i*90) );
         let y2 = y + (rad)*Math.sin( degreesToRadians(i*90) );
-
 
         let len = blockLen;
 
@@ -63,19 +85,12 @@ const createCrosshair = (color) => {
     }
 
 
-    ctx.strokeStyle = 'lime';
-    //ctx.strokeRect(x, y, 50, 50);
-
-    ctx.font = '50px monospace';
-    ctx.textAlign = 'center';
-    let str = `☠`;
-
-    ctx.fillText(str, x+0.5, y+18, 50);
 
     const img = new Image();
     img.src = canvas.toDataURL();
     return img;
 }
 
+let crosshairCenter;
 const crosshair = createCrosshair(`rgba(255, 0, 0, 0.7)`);
 const crosshairShadow = createCrosshair(`rgba(0, 0, 0, 0.7)`);

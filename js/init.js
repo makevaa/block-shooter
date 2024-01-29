@@ -8,8 +8,10 @@ const initCanvas = () => {
     let canvasW = viewportW;
     let canvasH = viewportH;
 
-    //canvasW = 5000;
-    //canvasH = 2000;
+
+
+    canvasW = 1000;
+    canvasH = canvasH - settings.xpBarHeight;
     
     //const ctx = canvas.getContext('2d');  // testing this line
     const scale = window.devicePixelRatio;  
@@ -22,6 +24,29 @@ const initCanvas = () => {
 
     // Prevent right-click from opening context menu
     canvas.addEventListener('contextmenu', e => e.preventDefault())
+
+    canvas.addEventListener('mouseleave', e => {
+        //e.preventDefault()
+        //log('mouse left canvas');
+    });
+
+    canvas.addEventListener('mouseenter', e => {
+        //e.preventDefault()
+
+        //log('mouse enter');
+        let x = e.layerX | 0; 
+        let y = e.layerY | 0;
+
+        x = e.layerX + camera.x;
+        y = e.layerY + camera.y;
+
+        //x = e.layerX;
+        //y = e.layerY;
+        //x =+ player.x;
+        //y =+ player.y;
+        //updateMouse(x, y);
+    });
+
 }
 
 
@@ -96,6 +121,23 @@ const initBg = () => {
     saveBg();
 }
 
+const setSidebars = () => {
+    const left = document.querySelector('#left.sidebar');
+    const right = document.querySelector('#right.sidebar');
+
+    const viewportW = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const viewportH = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    
+
+    const w = (viewportW - canvas.width) / 2;
+    left.style.width = `${w}px`;
+    right.style.width = `${w}px`;
+
+    //right.style.marginRight = w;
+
+    log(w)
+}
+
 
 const init = () => {
 
@@ -117,6 +159,7 @@ const init = () => {
    
 
     initCanvas();
+    setSidebars();
 
     collisionMap = createCollisionMap();
 
@@ -134,6 +177,7 @@ const init = () => {
 
     enemySpawner();
 
+    showSidebarImages();
     window.requestAnimationFrame(gameLoop);
 }
 
@@ -143,6 +187,7 @@ const update = (frameDur) => {
     enemySpawner();
     objectLimiter();
     updateEntites();
+
     updateCollisionMap();
     checkCollision();
 }
@@ -158,11 +203,17 @@ const render = () => {
     drawMuzzleFire();
 
     drawMouseLine();
+    //drawCrosshairTrails();
     drawCrosshair();
+
 
     drawPlayerHealthBar();
 
+    //drawSideBars();
+
     drawStats();
+
+
 
     if (settings.draw.debugData) { 
         drawCamera();
@@ -216,4 +267,17 @@ const gameLoop = now => {
 }
 
 
-init();
+
+
+if (settings.showStartMenu) {
+  // show atart menu here, when we have one later
+} else {
+    preloadImages(imagesToPreload).then(function(imgs) {
+        // all images are loaded now and in the array imgs
+        //log("all images loaded.")
+        init();
+    }, function(errImg) {
+        // at least one image failed to load
+        log("ERROR: failed to preload image: " + errImg);
+    });
+}
